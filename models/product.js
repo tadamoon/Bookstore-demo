@@ -4,20 +4,20 @@ const mongoose=require('mongoose');
 const productSchema=new mongoose.Schema({
    name: {
        type: String,
-       required:  true
+       required:  [true, 'book name cannot be blank']
    },
    author: {
        type: String,
-       required: true
+       required: [true, 'author cannot be blank']
    },
    price: {
        type: Number,
-       required: true,
+       required: [true, 'price cannot be blank'],
        min: 0
    },
    category:{
        type: String,
-       enum: ['Adventure', 'Romance', 'Horror', 'Sci-Fi', 'Kids+Teens', 'Educational']
+       enum: ['Adventure', 'Romance', 'Horror', 'Sci-Fi', 'Kids+Teens', 'Education']
    }
 
 })
