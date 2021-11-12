@@ -1,24 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Details Page</title>
-</head>
-<body>
-    <h1><%=book.name%> </h1>
-    <ul>
-        <li>Author:  <%=book.author%></li>
-        <li>Price:  <%=book.price%></li>
-        <li>Category:  <a href="/books?category=<%=book.category%>"><%=book.category%></a></li>
+<% layout('layouts/boilerplate') %> 
 
-
-    </ul>
-    <a href="/books">All Books</a>
-    <a href="/books/<%=book._id%>/edit">Edit Book</a>
-<form action="/books/<%=book._id%>?_method=DELETE" method="POST">
-    <button>DELETE</button>
-</form>
-</body>
-</html>
+<div class="row">
+    <div class="col-6">
+        <div class="card mb-3">
+    <img src="<%=book.image%>" alt="">
+    <img src="" class="card-img-top" alt="...">
+            <div class="card-body">
+              <h5 class="card-title"><%=book.name%></h5>
+              <p class="card-text"><%=book.author%></p>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item "><%=book.description%></li>
+              <li class="list-group-item"><%=book.category%></li>
+              
+            </ul>
+            <div class="card-body">
+                <a class="card-link btn btn-info" href="/books/<%=book._id%>/edit">Edit</a>
+                <form class="d-inline" action="/books/<%=book._id%>?_method=DELETE" method="POST">
+                    <button class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+            <div class="card-footer text muted">
+                <%=book.storyText%>  
+            </div>
+         </div>  
+        </div>
+       
+        </form>
+       
+    </div>
+</div>

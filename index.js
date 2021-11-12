@@ -6,7 +6,12 @@ const mongoose=require('mongoose');
 const methodOverride=require('method-override');
 const AppError= require('./AppError');
 const Product=require('./models/product');
+const ejsMate=require('ejs-mate');
+const  catchAsync=require('./utils/catchAsync');
+const ExpressError=require('./utils/ExpressError');
+const Joi=require('joi');
 
+app.engine('ejs', ejsMate);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
@@ -15,7 +20,7 @@ app.use(express.urlencoded({extended: true}))
 
 //mongoose stuff
 
-mongoose.connect('mongodb://localhost:27017/bookApp', { useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect('mongodb://localhost:27017/storyApp', { useNewUrlParser: true, useUnifiedTopology: true})
 .then(() =>{
     console.log('MONGO Connection Open!!!');
 })
@@ -28,7 +33,7 @@ const categories=['Adventure', 'Romance', 'Horror', 'Sci-Fi', 'Kids+Teens', 'Edu
 //////////////////////////////////////CRUD///////////////////////////////////////////////////////////////////////
 
 //routes(products)
-app.get('/books', wrapAsync(async (req, res, next) =>{
+app.get('/books', catchAsync(async (req, res, next) =>{
                                                  //try catch pattern for handling async errors
     const {category}=req.query;
     if(category){
@@ -47,55 +52,82 @@ app.get('/books/new', (req, res) =>{
     res.render('products/new', {categories});
 })
 
-app.post('/books', wrapAsync(async (req, res, next) =>{
-                                        // handle mongoose error
-    const newBook=new Product(req.body);
-    await newBook.save();
+app.post('/books', catchAsync(async (req, res, next) =>{
+     //if(!req.body.book) throw new ExpressError('Invalid Story Data', 400);  //no longer needed because of joi                                  // handle mongoose error
+    const productSchema=Joi.object({
+        book: Joi.object({
+            name: Joi.string().required(),
+            author: Joi.string().required(),
+            image: Joi.string().required(),
+            category: Joi.string().required(),
+            description: Joi.string().required(),
+            storyText: Joi.string().required()
+        }).required()
+    }) 
+     const {error}=productSchema.validate(req.body);
+     if(error){
+         const msg=error.details.map(el=>el.message).join(',')
+         throw new ExpressError(msg, 400);
+     }
+     console.log(error);
+     const book=new Product(req.body.book);
+    await book.save();
    // console.log(newBook);
-    res.redirect(`/books/${newBook._id}`)   //back to the show page
+    res.redirect(`/books/${book._id}`)   //back to the show page
     
 }))
+/*
 //function to wrap our async callbacks in
 function wrapAsync(fn){
     return function(req, res, next){
         fn(req, res, next).catch(e=>next(e))    //any errors in fn get passed to next
     }
 }
+*/
 //fn is below inside the function(async)
-app.get('/books/:id', wrapAsync(async (req, res, next) =>{
-    //this is fn below
+app.get('/books/:id', catchAsync(async (req, res, next) =>{
+//Only This Works to resolve bad book id errors!!!
+    try {
+        const book = await Product.findById(req.params.id);
+        res.render("products/show", { book });
+        } catch(err) {
+            throw new Error('Page Not Found!');
+        }
+
+
+/*    //this is fn below DOESNT WORK!!!
     const{ id } =req.params;
     const book = await Product.findById(id);
     if(!book)
     {
-        throw new AppError('OOOPS!, Looks like we do not have that book!', 404);
+        throw new ExpressError('OOOPS!, Looks like we do not have that story!', 404);
     }
    // console.log(book);
     res.render('products/show', { book });    //show page for individual book details
-        
+  */      
 }))
 
-app.get('/books/:id/edit', wrapAsync(async (req, res, next)=>{
+app.get('/books/:id/edit', catchAsync(async (req, res, next)=>{
 
     const{ id } =req.params;
     const book = await Product.findById(id);
     if(!book)
     {
-       throw new AppError('OOOPS!, Looks like we do not have that book!', 404);
+       throw new AppError('OOOPS!, Looks like we do not have that story!', 404);
     }
     res.render('products/edit', {book, categories});
        
 }))
 
-app.put('/books/:id', wrapAsync(async (req, res, next)=>{
+app.put('/books/:id', catchAsync(async (req, res, next)=>{
     
     const {id}=req.params;
-    const book = await Product.findByIdAndUpdate(id, req.body, { runValidators: true, new: true})   
+    const book = await Product.findByIdAndUpdate(id, req.body.book, { runValidators: true, new: true})   
     res.redirect(`/books/${book._id}`)
     
 }))
 
-app.delete('/books/:id', wrapAsync(async (req, res)=>{
+app.delete('/books/:id', catchAsync(async (req, res)=>{
     
     const {id}=req.params;
     const deletedBook= await Product.findByIdAndDelete(id);
@@ -103,6 +135,7 @@ app.delete('/books/:id', wrapAsync(async (req, res)=>{
        
 }))
 
+/*
 const handleValidationError=err=>{
     console.dir(err);
     return new AppError(`Input Error...${err.message}`, 400);
@@ -116,9 +149,17 @@ app.use((err, req, res, next)=>{
     next(err);
 })
 
+*/
+
+app.all('*', (req, res, next)=>{
+   next(new ExpressError('Page Not Found', 404))
+})
+
 app.use((err, req, res, next)=>{
-    const {status=500, message='Something went wrong'}=err;
-    res.status(status).send(message);
+   
+    const {statusCode=500}=err;
+    if(!err.message) err.message='Something Went Wrong...'
+    res.status(statusCode).render('error', {err})
 })
 
 app.listen(3000, () => {

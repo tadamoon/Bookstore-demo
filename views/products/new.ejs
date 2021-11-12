@@ -1,29 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Book</title>
-</head>
-<body>
-    <h1>Add A Book</h1>
-    <form action="/books" method="POST">
-        <label for="name">Book Name</label>
-        <input type="text" id="name" name="name" placeholder="Book Name">
-        <label for="price">Book Price</label>
-        <input type="number" id="price" name="price" placeholder="Book Price">
-        <label for="author">Book Author</label>
-        <input type="text" id="author" name="author" placeholder="Book Author">
-        <label for="category">Category</label>
-        <select name="category" id="category">
-            <% for(let category of categories) {%>
+<% layout('layouts/boilerplate') %> 
+
+<div class="row">
+    <h1 class="text-center">New Story</h1>
+    <div class="col-6 offset-3">
+        <form action="/books" method="POST" novalidate class="validated-form">
+            <div class="mb-3">
+                <label class="form-label" for="name">Story Title</label>
+                <input class="form-control"type="text" id="name" name="book[name]" placeholder="Story Title" required>
+                <div class="valid-feedback">Looks Good!</div>
+            </div> 
+            <div class="mb-3">
+                <label class="form-label" for="author">Author</label>
+                <input class="form-control" type="text" id="author" name="book[author]" placeholder="Author" required>
+                <div class="valid-feedback">Looks Good!</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="image">Image URL</label>
+                <input class="form-control" type="text" id="image" name="book[image]" placeholder="Image URL" > 
+                <div class="valid-feedback">Looks Good!</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="category">Category</label>
+                <select class="form-control" name="book[category]" id="category">
+                <% for(let category of categories) {%>
                     <option value="<%=category%>"><%=category%></option>
                 <%}%>
-            
-        </select>
-        <button>Add Book!</button>
-    </form>
-    
-</body>
-</html>
+            </select>
+            <div class="valid-feedback">Looks Good!</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <textarea class="form-control" type="text" id="description" name="book[description]" placeholder="short description" required></textarea>
+                <div class="valid-feedback">Looks Good!</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="storyText">Story Text</label>
+                <textarea class="form-control" type="text" id="storyText" name="book[storyText]" placeholder="Write or copy/paste your Story here" required></textarea>
+                <div class="valid-feedback">Looks Good!</div>
+            </div>
+         <button class="btn btn-success mb-3">Add Story</button>
+        </form>
+        <a href="/books">All Stories</a>
+    </div>
+</div>
+ 
+

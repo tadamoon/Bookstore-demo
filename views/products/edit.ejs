@@ -1,28 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Page</title>
-</head>
-<body>
-    <h1>Edit Book</h1>
-    <form action="/books/<%=book._id%>?_method=PUT" method="POST">
-        <label for="name">Book Name</label>
-        <input type="text" id="name" name="name" placeholder="Book Name" value="<%=book.name%>">
-        <label for="price">Book Price</label>
-        <input type="number" id="price" name="price" placeholder="Book Price" value="<%=book.price%>" >
-        <label for="author">Book Author</label>
-        <input type="text" id="author" name="author" placeholder="Book Author" value="<%=book.author%>" >
-        <label for="category">Category</label>
-        <select name="category" id="category">
-            <% for(let category of categories){ %>
-            <option value="<%=category%>"<%=book.category===category ? 'selected' : ''%> ><%=category%></option>
-            <% } %>
-        </select>
-        <button>Submit Changes!</button>
-        </form>
-        <a href="/books/<%=book._id%>">Cancel</a>
-</body>
-</html>
+<% layout('layouts/boilerplate') %> 
+
+
+        <div class="row">
+            <h1 class="text-center">Edit Story</h1>
+            <div class="col-6 offset-3">
+                <form action="/books/<%=book._id%>?_method=PUT" method="POST" novalidate class="validated-form">
+                    <div class="mb-3">
+                        <label class="form-label" for="name">Story Title</label>
+                        <input class="form-control"type="text" id="name" name="book[name]" value="<%=book.name%>" required>
+                        <div class="valid-feedback">Looks Good!</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="author">Author</label>
+                        <input class="form-control" type="text" id="author" name="book[author]" value="<%=book.author%>" required>
+                        <div class="valid-feedback">Looks Good!</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="image">Image URL</label>
+                        <input class="form-control" type="text" id="image" name="book[image]" value="<%=book.image%>" required>
+                        <div class="valid-feedback">Looks Good!</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="category">Category</label>
+                        <select class="form-control" name="book[category]" id="category">
+                        <% for(let category of categories) {%>
+                            <option value="<%=category%>"><%=category%></option>
+                        <%}%>
+                    </select>
+                    <div class="valid-feedback">Looks Good!</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea class="form-control" type="text" id="description" name="book[description]" required><%=book.description%></textarea>
+                        <div class="valid-feedback">Looks Good!</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="storyText">Story Text</label>
+                        <textarea class="form-control" type="text" id="storyText" name="book[storyText]" required><%=book.storyText%></textarea>
+                        <div class="valid-feedback">Looks Good!</div>
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-info">Update Story</button>
+                    </div>
+                 
+                </form>
+                <a href="/books/<%=book._id%>">Back to Story</a>
+            </div>
+        </div>
