@@ -9,7 +9,8 @@ const Product=require('./models/product');
 const ejsMate=require('ejs-mate');
 const  catchAsync=require('./utils/catchAsync');
 const ExpressError=require('./utils/ExpressError');
-const Joi=require('joi');
+const {productSchema, reviewSchema}=require('./schemas.js');
+const Review=require('./models/review');
 
 app.engine('ejs', ejsMate);
 app.set('views', path.join(__dirname, 'views'));
@@ -17,6 +18,28 @@ app.set('view engine', 'ejs');
 
 app.use(methodOverride('_method'))
 app.use(express.urlencoded({extended: true}))
+
+const validateStory=(req, res, next)=>{
+    
+     const {error}=productSchema.validate(req.body);
+     if(error){
+         const msg=error.details.map(el=>el.message).join(',')
+         throw new ExpressError(msg, 400);
+     }else {
+         next();
+     }    
+}
+
+const validateReview=(req, res, next)=>{
+    
+    const {error}=reviewSchema.validate(req.body);
+    if(error){
+        const msg=error.details.map(el=>el.message).join(',')
+        throw new ExpressError(msg, 400);
+    }else {
+        next();
+    }    
+}
 
 //mongoose stuff
 
@@ -52,24 +75,8 @@ app.get('/books/new', (req, res) =>{
     res.render('products/new', {categories});
 })
 
-app.post('/books', catchAsync(async (req, res, next) =>{
-     //if(!req.body.book) throw new ExpressError('Invalid Story Data', 400);  //no longer needed because of joi                                  // handle mongoose error
-    const productSchema=Joi.object({
-        book: Joi.object({
-            name: Joi.string().required(),
-            author: Joi.string().required(),
-            image: Joi.string().required(),
-            category: Joi.string().required(),
-            description: Joi.string().required(),
-            storyText: Joi.string().required()
-        }).required()
-    }) 
-     const {error}=productSchema.validate(req.body);
-     if(error){
-         const msg=error.details.map(el=>el.message).join(',')
-         throw new ExpressError(msg, 400);
-     }
-     console.log(error);
+app.post('/books', validateStory, catchAsync(async (req, res, next) =>{
+  
      const book=new Product(req.body.book);
     await book.save();
    // console.log(newBook);
@@ -88,7 +95,8 @@ function wrapAsync(fn){
 app.get('/books/:id', catchAsync(async (req, res, next) =>{
 //Only This Works to resolve bad book id errors!!!
     try {
-        const book = await Product.findById(req.params.id);
+        const book = await Product.findById(req.params.id).populate('reviews');
+        //console.log(book)
         res.render("products/show", { book });
         } catch(err) {
             throw new Error('Page Not Found!');
@@ -119,20 +127,36 @@ app.get('/books/:id/edit', catchAsync(async (req, res, next)=>{
        
 }))
 
-app.put('/books/:id', catchAsync(async (req, res, next)=>{
+app.put('/books/:id', validateStory, catchAsync(async (req, res, next)=>{
     
     const {id}=req.params;
     const book = await Product.findByIdAndUpdate(id, req.body.book, { runValidators: true, new: true})   
     res.redirect(`/books/${book._id}`)
     
 }))
-
+//delete a story
 app.delete('/books/:id', catchAsync(async (req, res)=>{
     
     const {id}=req.params;
     const deletedBook= await Product.findByIdAndDelete(id);
     res.redirect('/books')
        
+}))
+//reviews route
+app.post('/books/:id/reviews', validateReview, catchAsync(async(req, res, next)=>{
+    const book= await Product.findById(req.params.id);
+    const review=new Review(req.body.review);
+    book.reviews.push(review);
+    await review.save();
+    await book.save();
+    res.redirect(`/books/${book._id}`);
+}))
+
+app.delete('/books/:id/reviews/:reviewId', catchAsync(async(req, res)=>{
+    const{id, reviewId}=req.params;
+    await Product.findByIdAndUpdate(id, {$pull: {reviews: reviewId}});    //pull operator removes from anexisting array all instances of a value that match a specified condition(mongoDB)
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/books/${id}`);
 }))
 
 /*
